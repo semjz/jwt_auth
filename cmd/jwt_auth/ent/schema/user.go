@@ -21,6 +21,7 @@ func (User) Fields() []ent.Field {
 		field.String("password").Unique(),
 		field.String("email").Unique(),
 		field.Time("created_at").Default(time.Now),
+		field.String("role").Default("user"),
 	}
 }
 

@@ -33,6 +33,7 @@ func Register(client *ent.Client) fiber.Handler {
 			UserName string `json:"username"`
 			Email    string `json:"email"`
 			Pass     string `json:"pass"`
+			Role     string `json:"role"`
 		}
 
 		user := new(RegisterUser)
@@ -45,6 +46,10 @@ func Register(client *ent.Client) fiber.Handler {
 			return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Failed to hash password", "errors": err.Error()})
 		}
 
+		if user.Role != "user" && user.Role != "admin" {
+			return c.Status(400).JSON(fiber.Map{"status": "error", "message": "invalid role"})
+		}
+
 		user.Pass = hash
 		u, err := client.User.
 			Create().
@@ -53,6 +58,7 @@ func Register(client *ent.Client) fiber.Handler {
 			SetUsername(user.UserName).
 			SetEmail(user.Email).
 			SetPassword(user.Pass).
+			SetRole(user.Role).
 			Save(context.Background())
 
 		if err != nil {
@@ -68,10 +74,11 @@ func Login(client *ent.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		type LoginUser struct {
 			UserName string `json:"username"`
-			Pass     string `json:"pass"`
+			Pass     string `json:"password"`
 		}
 
 		loginUser := new(LoginUser)
+		fmt.Println("Fuck!")
 
 		if err := c.BodyParser(loginUser); err != nil {
 			return c.Status(500).JSON(fiber.Map{
@@ -105,15 +112,14 @@ func Login(client *ent.Client) fiber.Handler {
 		claims := token.Claims.(jwt.MapClaims)
 		claims["username"] = u.Username
 		claims["user_id"] = u.ID
+		claims["role"] = u.Role
 		claims["exp"] = time.Now().Add(time.Minute * 20).Unix()
-
-		log.Println("User logged in successfully: ", u)
 
 		t, err := token.SignedString([]byte(config.LoadEnvVariable("SECRET")))
 		if err != nil {
 			return c.SendStatus(fiber.StatusInternalServerError)
 		}
-
+		log.Println("User logged in successfully: ", u)
 		return c.JSON(fiber.Map{"status": "success", "message": "Success login", "data": t})
 	}
 }

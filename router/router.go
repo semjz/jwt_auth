@@ -9,7 +9,9 @@ import (
 )
 
 func SetupRputes(app *fiber.App, client *ent.Client) {
+
 	app.Post("/register", handler.Register(client))
 	app.Post("/login", handler.Login(client))
 	app.Get("/home", middleware.Protected(), handler.Home)
+	app.Get("admin/home", middleware.AdminOnly, middleware.Protected(), handler.Home)
 }
