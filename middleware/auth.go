@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"auth_project/config"
+	"fmt"
 
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
@@ -17,9 +18,12 @@ func Protected() fiber.Handler {
 }
 
 func AdminOnly(c *fiber.Ctx) error {
+	fmt.Println("------------------------")
+	fmt.Println(c.Locals("user").(*jwt.Token))
 	user := c.Locals("user").(*jwt.Token) // Get token from context
 	claims := user.Claims.(jwt.MapClaims) // Extract claims
-	role := claims["role"].(string)       // Get user role
+	fmt.Println(claims)
+	role := claims["role"].(string) // Get user role
 
 	if role != "admin" {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"message": "Access denied. Admins only."})

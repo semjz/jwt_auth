@@ -78,7 +78,6 @@ func Login(client *ent.Client) fiber.Handler {
 		}
 
 		loginUser := new(LoginUser)
-		fmt.Println("Fuck!")
 
 		if err := c.BodyParser(loginUser); err != nil {
 			return c.Status(500).JSON(fiber.Map{
